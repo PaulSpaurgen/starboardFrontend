@@ -23,19 +23,7 @@ export default function Nav({
   return (
     <div>
       <button className="text-gray-600 hover:text-gray-800 mt-[16px]">
-        <svg
-          className="w-6 h-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M15 19l-7-7 7-7"
-          />
-        </svg>
+        <Image src="assets/back.svg" alt="logo" width={44} height={24} />
       </button>
 
       <div className="flex items-center justify-between mb-4">
