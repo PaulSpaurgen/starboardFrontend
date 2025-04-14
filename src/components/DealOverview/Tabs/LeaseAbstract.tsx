@@ -4,56 +4,50 @@ import { mockPropertyData } from "./data/mockdata";
 import RentEscalationChart from "./components/RentEscalationChart";
 import { useRef } from "react";
 
+// Define section types for better type safety
+type SectionType = 'tenantInfo' | 'renewalOptions' | 'leaseTerms' | 'recoveryTerms' | 'rentStructure' | 'rentStructureChart';
+
 export default function LeaseAbstract() {
   const data = mockPropertyData;
-  const contentRef = useRef<HTMLDivElement>(null);
 
-  const tenantInfoRef = useRef<HTMLDivElement>(null);
-  const renewalOptionsRef = useRef<HTMLDivElement>(null);
-  const leaseTermsRef = useRef<HTMLDivElement>(null);
-  const recoveryTermsRef = useRef<HTMLDivElement>(null);
-  const rentStructureRef = useRef<HTMLDivElement>(null);
-  const rentStructureChartRef = useRef<HTMLDivElement>(null);
+  // Create a refs map for better type safety and organization
+  const sectionRefs = useRef<Record<SectionType, HTMLDivElement | null>>({
+    tenantInfo: null,
+    renewalOptions: null,
+    leaseTerms: null,
+    recoveryTerms: null,
+    rentStructure: null,
+    rentStructureChart: null
+  });
 
   const handleDownloadPDF = async () => {
-    if (!contentRef.current) return;
     const html2pdf = require("html2pdf.js");
     const parentElement = document.createElement("div");
-    parentElement.style.height = "100%";
+    const title = document.createElement("h1");
+    title.className = "text-2xlfont-bold mb-6";
+    title.textContent = "Lease Abstract";
+    parentElement.appendChild(title);
 
     // Helper function to add margin to elements
     const addElementWithSpacing = (element: Element) => {
       const wrapper = document.createElement('div');
-      wrapper.style.marginBottom = '40px'; // Add 40px spacing between elements
+      wrapper.style.marginBottom = '40px'; 
       wrapper.appendChild(element);
       parentElement.appendChild(wrapper);
     };
 
-    // Clone the rest of the elements
-    if (tenantInfoRef.current) {
-      const tenantInfoCopy = tenantInfoRef.current.cloneNode(true) as Element;
-      addElementWithSpacing(tenantInfoCopy);
-    }
-    if (renewalOptionsRef.current) {
-      const renewalOptionsCopy = renewalOptionsRef.current.cloneNode(true) as Element;
-      addElementWithSpacing(renewalOptionsCopy);
-    }
-    if (leaseTermsRef.current) {
-      const leaseTermsCopy = leaseTermsRef.current.cloneNode(true) as Element;
-      addElementWithSpacing(leaseTermsCopy);
-    }
-    if (recoveryTermsRef.current) {
-      const recoveryTermsCopy = recoveryTermsRef.current.cloneNode(true) as Element;
-      addElementWithSpacing(recoveryTermsCopy);
-    }
-    if (rentStructureRef.current) {
-      const rentStructureCopy = rentStructureRef.current.cloneNode(true) as Element;
-      addElementWithSpacing(rentStructureCopy);
-    }
+    // Clone all sections except chart
+    Object.entries(sectionRefs.current).forEach(([key, ref]) => {
+      if (ref && key !== 'rentStructureChart') {
+        const elementCopy = ref.cloneNode(true) as Element;
+        addElementWithSpacing(elementCopy);
+      }
+    });
 
-    
-    if (rentStructureChartRef.current) {
-      const canvas = rentStructureChartRef.current.querySelector('canvas');
+    // Handle chart separately due to canvas
+    const chartRef = sectionRefs.current.rentStructureChart;
+    if (chartRef) {
+      const canvas = chartRef.querySelector('canvas');
       if (canvas) {
         const chartImage = document.createElement('img');
         chartImage.src = canvas.toDataURL('image/png');
@@ -65,8 +59,6 @@ export default function LeaseAbstract() {
       }
     }
 
-    const element = parentElement;
-
     const opt = {
       margin: 1,
       filename: "lease-abstract.pdf",
@@ -75,7 +67,7 @@ export default function LeaseAbstract() {
       jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
     };
 
-    html2pdf().set(opt).from(element)?.save("lease-abstract.pdf");
+    html2pdf().set(opt).from(parentElement)?.save("lease-abstract.pdf");
   };
 
   return (
@@ -90,9 +82,9 @@ export default function LeaseAbstract() {
         </button>
       </div>
 
-      <div ref={contentRef} >
+      <div>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10 w-full justify-between p-4 pb-8 border-b border-gray-200 mb-8">
-          <div className="" ref={tenantInfoRef} >
+          <div className="" ref={el => { sectionRefs.current.tenantInfo = el }}>
             <h2 className="text-lg font-semibold mb-4">Tenant Information</h2>
             <div className="flex flex-wrap gap-8">
               <div>
@@ -106,7 +98,7 @@ export default function LeaseAbstract() {
             </div>
           </div>
           
-          <div className="" ref={leaseTermsRef} >
+          <div className="" ref={el => { sectionRefs.current.leaseTerms = el }}>
             <h2 className="text-lg font-semibold mb-4">Lease Terms</h2>
             <div className="flex flex-wrap gap-8">
               <div>
@@ -124,7 +116,7 @@ export default function LeaseAbstract() {
             </div>
           </div>
 
-          <div className="" ref={renewalOptionsRef} >
+          <div className="" ref={el => { sectionRefs.current.renewalOptions = el }}>
             <h2 className="text-lg font-semibold mb-4">Renewal Options</h2>
             <div className="space-y-4">
               {data.lease.renewalOptions.map((option, index) => (
@@ -155,7 +147,7 @@ export default function LeaseAbstract() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 w-full bg-white p-6 mb-6 gap-10 justify-between">
-          <div ref={recoveryTermsRef} >
+          <div ref={el => { sectionRefs.current.recoveryTerms = el }}>
             <h2 className="text-lg font-semibold mb-4">Recovery Terms</h2>
             <div className="flex flex-wrap gap-8 flex-col">
               <div>
@@ -181,7 +173,7 @@ export default function LeaseAbstract() {
             </div>
           </div>
 
-          <div ref={rentStructureRef} >
+          <div ref={el => { sectionRefs.current.rentStructure = el }}>
             <h2 className="text-lg font-semibold mb-4">Rent Structure</h2>
             <div className="flex flex-wrap gap-8 mb-6">
               <div>
@@ -198,7 +190,8 @@ export default function LeaseAbstract() {
               </div>
             </div>
           </div>
-          <div ref={rentStructureChartRef} >
+          
+          <div ref={el => { sectionRefs.current.rentStructureChart = el }}>
             <RentEscalationChart
               escalations={data.lease.rent.annualEscalations}
             />
